@@ -156,13 +156,21 @@ namespace YoutubeDownlist
 	{
 		public string id;
 		public YTSnippet snippet;
-	}
+        public override string ToString()
+        {
+            return snippet.title;
+        }
+    }
 
 	public class YTPlaylist : YTEntity
 	{
 		public string id;
 		public YTSnippet snippet;
-	}
+        public override string ToString()
+        {
+            return snippet.title;
+        }
+    }
 
 	public struct YTID
 	{
@@ -174,7 +182,11 @@ namespace YoutubeDownlist
 	{
 		public YTID id;
 		public YTSnippet snippet;
-	}
+        public override string ToString()
+        {
+            return snippet.title;
+        }
+    }
 
 	public class YTSnippet
 	{
@@ -185,7 +197,11 @@ namespace YoutubeDownlist
 		public YTThumbs thumbnails;
 		public string channelTitle;
 		public YTID resourceId;
-	}
+        public override string ToString()
+        {
+            return title;
+        }
+    }
 
 	public class YTThumbs
 	{

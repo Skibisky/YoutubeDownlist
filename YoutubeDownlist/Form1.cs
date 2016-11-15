@@ -63,11 +63,17 @@ namespace YoutubeDownlist
         }
         private void WriteFail(string s)
         {
-            richOutput.SelectionFont = new Font(richOutput.SelectionFont, FontStyle.Bold);
-            richOutput.SelectionColor = Color.Red;
+            this.Invoke((MethodInvoker)delegate
+            {
+                richOutput.SelectionFont = new Font(richOutput.SelectionFont, FontStyle.Bold);
+                richOutput.SelectionColor = Color.Red;
+            });
             WriteLine("[ FAIL] " + s);
-            richOutput.SelectionColor = Color.Black;
-            richOutput.SelectionFont = new Font(richOutput.SelectionFont, FontStyle.Regular);
+            this.Invoke((MethodInvoker)delegate
+            {
+                richOutput.SelectionColor = Color.Black;
+                richOutput.SelectionFont = new Font(richOutput.SelectionFont, FontStyle.Regular);
+            });
         }
 
         private void btnStart_Click(object sender, EventArgs e)

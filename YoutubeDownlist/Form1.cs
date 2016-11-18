@@ -418,12 +418,21 @@ namespace YoutubeDownlist
             {
                 i++;
                 if (vid == null)
+                {
                     continue;
+                }
 
                 string vname = betterFile(vid.snippet.title);
 
                 string testdir = dir + "\\" + folder + "\\";
                 string fname = testdir + i.ToString(format) + " - " + vname.Replace('|', '-');
+
+                if (vid == null)
+                {
+                    File.WriteAllText(fname + ".txt", "TODO");
+                    continue;
+                }
+
                 string opt = null;
                 FileInfo mf = new FileInfo(fname + ".mp3");
                 if (!mf.Exists)
@@ -466,52 +475,77 @@ namespace YoutubeDownlist
 
                     playlist.WriteLine(mf.Name);
                     playlist.Flush();
-                    var lf = Orthogonal.NTagLite.LiteFile.LoadFromFile(fname + ".mp3");
-                    var tag = lf.Tag;
-
-                    string title = vname;
-                    string artist = null;
-
-                    if (title.Contains(" - ") || title.Contains(" -- "))
+                    int tries = 0;
+                    while (tries >= 0 && tries <= 5)
                     {
-                        int pos = title.IndexOf(" - ");
-                        if (pos < 0)
-                            pos = title.IndexOf(" -- ");
-                        artist = title.Substring(0, pos);
-                        title = title.Substring(pos + 3);
-                    }
+                        try
+                        {
+                            var lf = Orthogonal.NTagLite.LiteFile.LoadFromFile(fname + ".mp3");
+                            var tag = lf.Tag;
 
-                    tag.Title = title;
-                    tag.Album = album;
-                    tag.Artist = artist;
-                    //int cd = (int)(1 + Math.Floor(i / (double)99));
-                    //tag.AddFrame(new Frame())
-                    int track = i;
-                    while (track > 99)
-                        track -= 99;
-                    tag.TrackNumber = (short?)(track);
+                            string title = vname;
+                            string artist = null;
 
-                    Orthogonal.NTagLite.Picture[] pics = lf.Tag.FindFramesById(FrameId.APIC).Select(f => f.GetPicture()).ToArray();
-                    var front = pics.SingleOrDefault(p => p.PictureType == LitePictureType.CoverFront);
-                    string replaceFile = "NewFrontCover.png";
-                    var iconreq = WebRequest.Create(vid.snippet.thumbnails.high.url);
-                    Image.FromStream(iconreq.GetResponse().GetResponseStream()).Save(replaceFile);
-                    if (front != null)
-                    {
-                        front.Description = "Front Cover";
-                        front.MimeType = LiteHelper.FilenameToImageMime(replaceFile);
-                        front.Data = File.ReadAllBytes(replaceFile);
-                        front.UpdateSourceFrame();
-                        WriteLine("Changed image");
-                    }
-                    else
-                    {
-                        lf.Tag.AddPictureFrame(LitePictureType.CoverFront, "Front Cover", replaceFile);
-                        WriteLine("Added image");
-                    }
-                    //File.Delete(replaceFile);
-                    lf.UpdateFile();
+                            foreach (var sep in new string[] { " - ", " -- ", "- ", " -", " ~ ", " | ", "-", "~", "|"})
+                            {
+                                if (title.Contains(sep))
+                                {
+                                    int pos = title.IndexOf(sep);
+                                    artist = title.Substring(0, pos);
+                                    title = title.Substring(pos + sep.Length);
+                                    break;
+                                }
+                            }
 
+                            tag.Title = title;
+                            tag.Album = album;
+                            tag.Artist = artist;
+                            //int cd = (int)(1 + Math.Floor(i / (double)99));
+                            //tag.AddFrame(new Frame())
+                            int track = i;
+                            int disk = 1;
+                            int diskn = (int)Math.Ceiling(vids.Count / (double)99);
+                            while (track > 99)
+                            {
+                                track -= 99;
+                                disk++;
+                            }
+                            tag.TrackNumber = (short?)(track);
+                            if (vids.Count > 99)
+                                tag.AddTextFrame(FrameId.TPOS, disk + "/" + diskn);
+
+                            Orthogonal.NTagLite.Picture[] pics = lf.Tag.FindFramesById(FrameId.APIC).Select(f => f.GetPicture()).ToArray();
+                            var front = pics.SingleOrDefault(p => p.PictureType == LitePictureType.CoverFront);
+                            string replaceFile = "NewFrontCover.png";
+                            var iconreq = WebRequest.Create(vid.snippet.thumbnails.high.url);
+                            Image.FromStream(iconreq.GetResponse().GetResponseStream()).Save(replaceFile);
+                            if (front != null)
+                            {
+                                front.Description = "Front Cover";
+                                front.MimeType = LiteHelper.FilenameToImageMime(replaceFile);
+                                front.Data = File.ReadAllBytes(replaceFile);
+                                front.UpdateSourceFrame();
+                                WriteLine("Changed image");
+                            }
+                            else
+                            {
+                                lf.Tag.AddPictureFrame(LitePictureType.CoverFront, "Front Cover", replaceFile);
+                                WriteLine("Added image");
+                            }
+                            //File.Delete(replaceFile);
+                            lf.UpdateFile();
+                            break;
+                        }
+                        catch (Exception e)
+                        {
+                            WriteFail(e.GetType().ToString());
+                            Thread.Sleep(1000);
+                            if (tries >= 5)
+                                throw;
+                            tries++;
+                        }
+                    }
+                    
                     WriteLine("Completed " + vid.snippet.title);
                 }
                 else
@@ -647,10 +681,15 @@ namespace YoutubeDownlist
                                         break;
                                     }
                                 }
+
+                                if (vid == null)
+                                {
+                                    File.WriteAllText(dir + "\\" + masterlist + "\\" + (i + "").PadLeft(1 + (int)Math.Floor(Math.Log10(g.Count())), '0') + " " + artist + " - " + name + ".txt", "TODO");
+                                }
+
                                 // TODO: ensure song has right names
                                 //var vid = ytapi.Video(results.First().id.videoId);
-                                if (vid != null)
-                                    vids.Add(vid);
+                                vids.Add(vid);
                             }
                             var songnames = ProcessVids(vids, masterlist);//, "YTDL");
                             /*

@@ -670,7 +670,9 @@ namespace YoutubeDownlist
                                 var results = LookupSong(target, 5);
                                 YTVideo vid = null;
                                 string name = search.query.Split('-')[0].Trim();
-                                string artist = search.query.Split('-')[1].Trim();
+                                string artist = "";
+                                if (search.query.Split('-').Length > 1)
+                                    artist = search.query.Split('-')[1].Trim();
                                 foreach (var r in results)
                                 {
                                     var v = ytapi.Video(r.id.videoId);

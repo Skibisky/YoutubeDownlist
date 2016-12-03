@@ -143,8 +143,10 @@ namespace YoutubeDownlist
                 string points = "►";
 
                 WriteLine(betterFile(vid.snippet.title));
-                WriteLine("==========");
 
+                
+                WriteLine("==========");
+                int co = 0;
                 foreach (var l in lines)
                 {
                     if (reg1.IsMatch(l))
@@ -154,10 +156,19 @@ namespace YoutubeDownlist
                         var s = new ListSearch(cleanName);
                         s.album = betterFile(vid.snippet.title);
                         slines.Add(s);
+                        co++;
                         WriteLine(cleanName);
                     }
                 }
                 WriteLine("==========");
+                if (co == 0)
+                {
+                    string cleanName = new string(vid.snippet.title.Where(c => !points.Contains(c)).ToArray());
+                    cleanName = reg2.Replace(cleanName, "");
+                    slines.Add(new ListSearch(cleanName));
+                    continue;
+                }
+
             }
             return slines;
         }
@@ -581,8 +592,8 @@ namespace YoutubeDownlist
                         Directory.CreateDirectory(dir);
                 }
 
-                //if (!Directory.Exists(dir + "\\YTDL"))
-                //    Directory.CreateDirectory(dir + "\\YTDL");
+                if (!Directory.Exists(dir + "\\" + masterlist))
+                    Directory.CreateDirectory(dir + "\\" + masterlist);
 
                 //string m3uloc = dir + "\\YTDL\\" + masterlist + ".m3u";
                 string m3uloc = dir + "\\" + masterlist + "\\" + masterlist + ".m3u";

@@ -583,6 +583,7 @@ namespace YoutubeDownlist
             {
                 string masterlist;
                 var list = GetSongs(srcUri, out masterlist);
+				masterlist = masterlist.Replace("\\", "_").Replace("/", "_");
 
                 string dir = Properties.Settings.Default.path;
                 if (!Directory.Exists(dir))
